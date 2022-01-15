@@ -1621,18 +1621,21 @@ v_rshift(digit *z, digit *a, Py_ssize_t m, int d)
 static digit
 inplace_divrem1(digit *pout, digit *pin, Py_ssize_t size, digit n)
 {
-    twodigits rem = 0;
+    digit remainder = 0;
 
     assert(n > 0 && n <= PyLong_MASK);
-    pin += size;
-    pout += size;
     while (--size >= 0) {
-        digit hi;
-        rem = (rem << PyLong_SHIFT) | *--pin;
-        *--pout = hi = (digit)(rem / n);
-        rem -= (twodigits)hi * n;
+        twodigits dividend = ((twodigits)remainder << PyLong_SHIFT) | pin[size];
+        digit quotient, high, low;
+        high = (digit)(dividend >> 32);
+        low = (digit)dividend;
+        __asm__("divl %2\n"
+            : "=a" (quotient), "=d" (remainder)
+            : "r" (n), "a" (low), "d" (high)
+        );
+        pout[size] = quotient;
     }
-    return (digit)rem;
+    return remainder;
 }
 
 /* Divide an integer by a digit, returning both the quotient
