@@ -791,6 +791,12 @@ class LongTest(unittest.TestCase):
         self.assertEqual(12 // -3, -4)
         self.assertEqual(12 // 3, 4)
 
+    def test_lots_of_divisions_by_17(self):
+        for n in range(2**100, 2**100 + 2**24):
+            q = n // 17
+            m = q * 17
+            self.assertTrue(0 <= n - m < 17)
+
     def check_truediv(self, a, b, skip_small=True):
         """Verify that the result of a/b is correctly rounded, by
         comparing it with a pure Python implementation of correctly
